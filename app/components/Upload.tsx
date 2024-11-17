@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Upload as UploadIcon, Camera, Image } from 'lucide-react';
 import Confetti from 'react-confetti';
 
@@ -20,13 +20,28 @@ type Prediction = {
   confidence: number;
 }
 
+// Add this new type for preview URL
+type FileWithPreview = File & {
+  preview?: string;
+};
+
 export default function Upload() {
   const [isDragging, setIsDragging] = useState(false);
-  const [file, setFile] = useState<File | null>(null);
+  const [file, setFile] = useState<FileWithPreview | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [progress, setProgress] = useState(0); // For progress tracking
   const [predictions, setPredictions] = useState<Prediction[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [showConfetti, setShowConfetti] = useState(false);
+
+  // Clean up preview URL when component unmounts
+  useEffect(() => {
+    return () => {
+      if (file?.preview) {
+        URL.revokeObjectURL(file.preview);
+      }
+    };
+  }, [file]);
 
   const analyzeImage = async (file: File) => {
     try {
@@ -77,28 +92,43 @@ export default function Upload() {
   };
 
   const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0]
-    if (!file) return
+    const selectedFile = event.target.files?.[0];
+    if (!selectedFile) return;
     
     try {
-      setFile(file)
-      setIsAnalyzing(true)
-      setError(null)
+      // Create preview URL
+      const previewUrl = URL.createObjectURL(selectedFile);
+      const fileWithPreview = Object.assign(selectedFile, { preview: previewUrl });
       
-      console.log('Processing file:', file.name)
-      const predictions = await analyzeImage(file)
-      console.log('Got predictions:', predictions)
+      setFile(fileWithPreview);
+      setIsAnalyzing(true);
+      setError(null);
+      setProgress(0);
+
+      // Simulate progress (you can adjust this based on your needs)
+      const progressInterval = setInterval(() => {
+        setProgress(prev => {
+          if (prev >= 90) {
+            clearInterval(progressInterval);
+            return prev;
+          }
+          return prev + 10;
+        });
+      }, 500);
+
+      const predictions = await analyzeImage(selectedFile);
       
-      setPredictions(predictions)
-      handleSuccessfulUpload()
+      clearInterval(progressInterval);
+      setProgress(100);
+      setPredictions(predictions);
+      handleSuccessfulUpload();
       
     } catch (error) {
-      console.error('Upload error:', error)
-      setError(error.message || 'Failed to process image')
+      setError(error.message || 'Failed to process image');
     } finally {
-      setIsAnalyzing(false)
+      setIsAnalyzing(false);
     }
-  }
+  };
 
   const handleSuccessfulUpload = () => {
     setShowConfetti(true);
@@ -145,14 +175,35 @@ export default function Upload() {
         <div className="max-w-sm mx-auto">
           {file ? (
             <div className="space-y-4">
-              <Image className="w-16 h-16 mx-auto text-red-500" />
+              {/* Image Preview */}
+              <div className="relative">
+                <img
+                  src={file.preview}
+                  alt="Preview"
+                  className="w-full h-64 object-contain rounded-lg"
+                />
+                {isAnalyzing && (
+                  <div className="absolute inset-0 flex flex-col items-center justify-center bg-black bg-opacity-50 rounded-lg">
+                    {/* Simple Spinning Circle */}
+                    <div className="w-12 h-12 mb-4">
+                      <div className="w-full h-full border-4 border-white border-t-transparent rounded-full animate-spin" />
+                    </div>
+                    
+                    {/* Progress Bar */}
+                    <div className="w-full max-w-xs bg-gray-200 rounded-full h-2.5 dark:bg-gray-700 overflow-hidden">
+                      <div 
+                        className="bg-red-500 h-2.5 rounded-full transition-all duration-500"
+                        style={{ width: `${progress}%` }}
+                      />
+                    </div>
+                    <p className="text-white mt-2">Analyzing your kart... {progress}%</p>
+                  </div>
+                )}
+              </div>
+
               <p className="text-lg font-medium">{file.name}</p>
-              {isAnalyzing ? (
-                <div className="flex items-center justify-center space-x-2">
-                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-red-500" />
-                  <p className="text-gray-600">Analyzing your kart...</p>
-                </div>
-              ) : error ? (
+              
+              {error ? (
                 <p className="text-red-500">{error}</p>
               ) : predictions ? (
                 <div className="space-y-2">
@@ -160,24 +211,32 @@ export default function Upload() {
                   <div className="text-left bg-gray-50 p-4 rounded overflow-auto">
                     {predictions.map((pred, index) => (
                       <div key={index} className="mb-2">
-                        <p className="font-medium">{pred.label}</p>
-                        <p className="text-sm text-gray-600">
-                          Confidence: {(pred.confidence * 100).toFixed(2)}%
-                        </p>
+                        <p className="font-medium text-lg">{pred.label}</p>
+                        <div className="w-full bg-gray-200 rounded-full h-2.5 mb-1">
+                          <div 
+                            className="bg-red-500 h-2.5 rounded-full transition-all duration-500"
+                            style={{ width: `${pred.confidence * 100}%` }}
+                          />
+                        </div>
                       </div>
                     ))}
                   </div>
                 </div>
               ) : null}
+
               <button
                 onClick={() => {
+                  if (file.preview) {
+                    URL.revokeObjectURL(file.preview);
+                  }
                   setFile(null);
                   setPredictions(null);
                   setError(null);
+                  setProgress(0);
                 }}
                 className="text-red-500 hover:text-red-700 transition-colors"
               >
-                Remove
+                Start Again
               </button>
             </div>
           ) : (
