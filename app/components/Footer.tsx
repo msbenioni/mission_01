@@ -1,107 +1,144 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Flag, Trophy, Heart, Instagram, Twitter, Facebook } from 'lucide-react';
+import { Facebook, Twitter, Instagram, Trophy, Star } from 'lucide-react';
 import Link from 'next/link';
 
-const QUICK_LINKS = [
-  { id: 'about', label: 'About Us', href: '/about' },
-  { id: 'insurance', label: 'Insurance Plans', href: '/insurance' },
-  { id: 'faq', label: 'FAQs', href: '/faq' },
-  { id: 'support', label: 'Support', href: '/support' }
-];
-
-const SOCIAL_LINKS = [
-  { id: 'instagram', Icon: Instagram, href: '#instagram' },
-  { id: 'twitter', Icon: Twitter, href: '#twitter' },
-  { id: 'facebook', Icon: Facebook, href: '#facebook' }
-];
+// Single race on Christmas Day
+const MARIO_KART_RACE = {
+  name: "Mushroom Cup Grand Prix",
+  track: "Mario Kart Stadium",
+  date: "2024-12-25T10:00:00Z", // Christmas Day 2024
+  icon: "🍄"
+};
 
 export default function Footer() {
-  const [timeUntilNextQuoteDay, setTimeUntilNextQuoteDay] = useState('');
+  const [raceCountdown, setRaceCountdown] = useState({
+    name: MARIO_KART_RACE.name,
+    track: MARIO_KART_RACE.track,
+    timeLeft: '',
+    icon: MARIO_KART_RACE.icon
+  });
 
   useEffect(() => {
-    const updateTimer = () => {
-      const now = new Date();
-      const nextQuoteDay = new Date();
-      nextQuoteDay.setDate(nextQuoteDay.getDate() + (5 - nextQuoteDay.getDay()));
-      nextQuoteDay.setHours(9, 0, 0, 0);
-      
-      const diff = nextQuoteDay.getTime() - now.getTime();
-      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-      const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-      setTimeUntilNextQuoteDay(`${days}d ${hours}h`);
+    const calculateTimeLeft = () => {
+      const now = new Date().getTime();
+      const raceTime = new Date(MARIO_KART_RACE.date).getTime();
+      const difference = raceTime - now;
+
+      if (difference <= 0) {
+        return "🏎️ Race Day!";
+      }
+
+      const days = Math.floor(difference / (1000 * 60 * 60 * 24));
+      const hours = Math.floor((difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      const minutes = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((difference % (1000 * 60)) / 1000);
+
+      return `${days}d ${hours}h ${minutes}m ${seconds}s`;
     };
 
-    updateTimer();
-    const interval = setInterval(updateTimer, 1000 * 60);
-    return () => clearInterval(interval);
+    // Update countdown immediately
+    setRaceCountdown(prev => ({
+      ...prev,
+      timeLeft: calculateTimeLeft()
+    }));
+
+    // Update countdown every second
+    const timer = setInterval(() => {
+      setRaceCountdown(prev => ({
+        ...prev,
+        timeLeft: calculateTimeLeft()
+      }));
+    }, 1000);
+
+    return () => clearInterval(timer);
   }, []);
 
   return (
-    <footer className="bg-gray-900 text-white">
-      <div className="max-w-7xl mx-auto px-4 py-12 sm:px-6 lg:px-8">
+    <footer className="bg-gray-900 text-white py-12">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           {/* Column 1: Logo & Description */}
-          <div className="space-y-4">
-            <div className="flex items-center space-x-2">
-              <Trophy className="h-8 w-8 text-yellow-400" />
-              <span className="text-xl font-bold">Turners Karts</span>
-            </div>
+          <div className="text-center md:text-left">
+            <h3 className="text-xl font-bold mb-4">Turners Karts</h3>
             <p className="text-gray-400">
-              Racing into the future of kart insurance!
+              Protecting your kart racing adventures with comprehensive insurance coverage.
             </p>
           </div>
 
           {/* Column 2: Quick Links */}
-          <div>
+          <div className="text-center md:text-left">
             <h3 className="text-lg font-semibold mb-4">Quick Links</h3>
             <ul className="space-y-2">
-              {QUICK_LINKS.map(({ id, label, href }) => (
-                <li key={id}>
-                  <Link 
-                    href={href}
-                    className="text-gray-400 hover:text-white transition-colors"
-                  >
-                    {label}
-                  </Link>
-                </li>
-              ))}
+              <li>
+                <Link href="/about" className="text-gray-400 hover:text-white transition">
+                  About Us
+                </Link>
+              </li>
+              <li>
+                <Link href="/contact" className="text-gray-400 hover:text-white transition">
+                  Contact
+                </Link>
+              </li>
+              <li>
+                <Link href="/privacy" className="text-gray-400 hover:text-white transition">
+                  Privacy Policy
+                </Link>
+              </li>
+              <li>
+                <Link href="/terms" className="text-gray-400 hover:text-white transition">
+                  Terms of Service
+                </Link>
+              </li>
             </ul>
           </div>
 
-          {/* Column 3: Next Quote Day Timer */}
+          {/* Column 3: Social Links */}
           <div className="text-center md:text-left">
-            <h3 className="text-lg font-semibold mb-4">Next Quote Day</h3>
-            <div className="inline-flex items-center space-x-2 bg-gray-800 px-4 py-2 rounded-full">
-              <Flag className="h-5 w-5 text-red-500 animate-bounce-slow" />
-              <span className="font-mono">{timeUntilNextQuoteDay}</span>
+            <h3 className="text-lg font-semibold mb-4">Connect With Us</h3>
+            <div className="flex justify-center md:justify-start space-x-4">
+              <Link href="#" className="text-gray-400 hover:text-white transition">
+                <Facebook className="h-6 w-6" />
+              </Link>
+              <Link href="#" className="text-gray-400 hover:text-white transition">
+                <Twitter className="h-6 w-6" />
+              </Link>
+              <Link href="#" className="text-gray-400 hover:text-white transition">
+                <Instagram className="h-6 w-6" />
+              </Link>
             </div>
           </div>
 
-          {/* Column 4: Social Links */}
+          {/* Column 4: Christmas Day Race Countdown */}
           <div className="text-center md:text-left">
-            <h3 className="text-lg font-semibold mb-4">Follow Us</h3>
-            <div className="flex space-x-4 justify-center md:justify-start">
-              {SOCIAL_LINKS.map(({ id, Icon, href }) => (
-                <Link 
-                  key={id}
-                  href={href}
-                  className="transform hover:scale-110 transition-transform"
-                >
-                  <Icon className="h-6 w-6 text-gray-400 hover:text-white" />
-                </Link>
-              ))}
+            <h3 className="text-lg font-semibold mb-4 flex items-center gap-2 justify-center md:justify-start">
+              <Trophy className="h-5 w-5 text-yellow-400" />
+              Christmas Day Race
+            </h3>
+            <div className="inline-flex flex-col items-center space-y-2 w-full">
+              <div className="bg-gray-800/50 backdrop-blur-sm px-4 py-2 rounded-full w-full text-center">
+                <span className="text-2xl mr-2 animate-bounce-slow inline-block">
+                  {raceCountdown.icon}
+                </span>
+                <span className="font-bold bg-gradient-to-r from-red-500 to-yellow-500 text-transparent bg-clip-text">
+                  {raceCountdown.name}
+                </span>
+              </div>
+              <div className="bg-gray-800/50 backdrop-blur-sm px-4 py-2 rounded-full w-full text-center">
+                <Star className="h-5 w-5 text-yellow-400 inline-block mr-2 animate-spin-slow" />
+                <span className="text-blue-400">{raceCountdown.track}</span>
+              </div>
+              <div className="bg-gray-800/50 backdrop-blur-sm px-4 py-2 rounded-full w-full text-center font-mono">
+                {raceCountdown.timeLeft}
+              </div>
             </div>
           </div>
         </div>
 
-        {/* Bottom Bar */}
-        <div className="mt-8 pt-8 border-t border-gray-800 text-center">
-          <p className="text-gray-400">
-            © {new Date().getFullYear()} Turners Karts. Made with{' '}
-            <Heart className="h-4 w-4 inline-block text-red-500 animate-pulse" /> in NZ
-          </p>
+        {/* Copyright */}
+        <div className="mt-8 pt-8 border-t border-gray-800 text-center text-gray-400">
+          <p>&copy; {new Date().getFullYear()} Turners Karts. All rights reserved.</p>
         </div>
       </div>
     </footer>

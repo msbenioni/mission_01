@@ -21,6 +21,7 @@ const config: Config = {
       animation: {
         'bounce-slow': 'bounce-slow 3s ease-in-out infinite',
         'fade-in': 'fade-in 0.5s ease-out',
+        'spin-slow': 'spin 3s linear infinite',
       },
       keyframes: {
         'bounce-slow': {

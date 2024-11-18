@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Upload as UploadIcon, Camera, Image } from 'lucide-react';
 import Confetti from 'react-confetti';
+import InsuranceOptions from './InsuranceOptions';
 
 type PredictionResponse = {
   predictions: Array<{
@@ -201,8 +202,6 @@ export default function Upload() {
                 )}
               </div>
 
-              <p className="text-lg font-medium">{file.name}</p>
-              
               {error ? (
                 <p className="text-red-500">{error}</p>
               ) : predictions ? (
@@ -260,6 +259,10 @@ export default function Upload() {
           )}
         </div>
       </div>
+
+      {predictions && (
+        <InsuranceOptions kartType={predictions[0].label} />
+      )}
     </div>
   );
 }
