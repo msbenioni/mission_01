@@ -80,8 +80,11 @@ interface InsuranceOptionsProps {
 }
 
 export default function InsuranceOptions({ kartType }: InsuranceOptionsProps) {
+  console.log('Received kartType:', kartType);
+  
   // Determine which insurance packages are available for this kart
   const getRecommendedPackages = () => {
+    console.log('Valid kart types:', Object.values(KART_CATEGORIES).flat());
     const validKartType = Object.values(KART_CATEGORIES)
       .flat()
       .includes(kartType);
