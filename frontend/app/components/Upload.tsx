@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, ChangeEvent } from 'react';
 import { Upload as UploadIcon, Camera } from 'lucide-react';
 import Confetti from 'react-confetti';
 import InsuranceOptions from './InsuranceOptions';
@@ -35,12 +35,17 @@ export default function Upload() {
 
   const analyzeImage = async (file: File) => {
     try {
-      const formData = new FormData();
-      formData.append('image', file);
+      // Convert File to base64
+      const base64Image = await fileToBase64(file);
       
-      const response = await fetch('/api/predict', {
+      const response = await fetch('http://localhost:8000/predict', {  // Note the port change
         method: 'POST',
-        body: formData
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ 
+          image: base64Image 
+        })
       });
       
       if (!response.ok) {
@@ -49,18 +54,35 @@ export default function Upload() {
       
       const data = await response.json();
       
-      if (!data.success || !data.predictions) {
-        throw new Error('Invalid response format');
+      if (!data.success) {
+        throw new Error(data.error || 'Invalid response format');
       }
 
       return [{
-        label: data.predictions.kartType,
-        confidence: data.predictions.confidence
+        label: data.prediction.class,        // Adjust based on your backend response
+        confidence: data.prediction.confidence
       }];
     } catch (error) {
       console.error('Analysis error:', error);
       throw error;
     }
+  };
+
+  const fileToBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => {
+        if (typeof reader.result === 'string') {
+          // Remove the data:image/jpeg;base64, prefix
+          const base64 = reader.result.split(',')[1];
+          resolve(base64);
+        } else {
+          reject(new Error('Failed to convert file to base64'));
+        }
+      };
+      reader.onerror = error => reject(error);
+    });
   };
 
   const handleDrop = async (e: React.DragEvent) => {

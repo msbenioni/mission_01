@@ -1,7 +1,7 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-from .predict import get_prediction
+from src.predict import get_prediction
 
 app = FastAPI()
 
