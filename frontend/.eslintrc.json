@@ -1,0 +1,15 @@
+{
+  "extends": [
+    "eslint:recommended",
+    "@typescript-eslint/recommended",
+    "next/core-web-vitals",
+    "next/typescript"
+  ],
+  "plugins": ["react-hooks"],
+  "ignorePatterns": ["dist"],
+  "rules": {
+    "react-hooks/rules-of-hooks": "error",
+    "react-hooks/exhaustive-deps": "warn"
+  }
+}
+      

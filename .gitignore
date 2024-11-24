@@ -72,3 +72,50 @@ public/videos/*
 
 # Keep the directory but ignore contents
 !public/videos/.gitkeep
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual Environment
+venv/
+ENV/
+env/
+.env/
+
+# ML Model files and data
+*.keras
+*.h5
+*.hdf5
+*.pkl
+data/images/
+model/*.keras
+
+# Jupyter Notebook
+.ipynb_checkpoints
+*.ipynb
+
+# VS Code settings
+.vscode/
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
