@@ -82,6 +82,14 @@ interface InsuranceOptionsProps {
 export default function InsuranceOptions({ kartType }: InsuranceOptionsProps) {
   // Determine which insurance packages are available for this kart
   const getRecommendedPackages = () => {
+    const validKartType = Object.values(KART_CATEGORIES)
+      .flat()
+      .includes(kartType);
+    
+    if (!validKartType) {
+      return [];  // Or handle invalid kart type appropriately
+    }
+    
     const packages = [];
     for (const [key, package_] of Object.entries(INSURANCE_PACKAGES)) {
       if (package_.bestFor.includes(kartType)) {
@@ -97,7 +105,7 @@ export default function InsuranceOptions({ kartType }: InsuranceOptionsProps) {
     <div className="flex justify-center items-center min-h-screen py-12 px-4">
       <div className="max-w-5xl w-full">
         <h2 className="text-3xl font-bold text-center mb-8">
-          Recommended Insurance Packages for Your {kartType.replace(/_/g, ' ')}
+          Recommended Insurance Packages for Your {kartType?.replace(/_/g, ' ') || 'Kart'}
         </h2>
         
         <div className="flex flex-col items-center gap-8">

@@ -7,7 +7,7 @@ import InsuranceOptions from './InsuranceOptions';
 import '../globals.css';
 
 type Prediction = {
-  label: string;
+  class: string;
   confidence: number;
 }
 
@@ -38,7 +38,7 @@ export default function Upload() {
       // Convert File to base64
       const base64Image = await fileToBase64(file);
       
-      const response = await fetch('http://localhost:8000/predict', {  // Note the port change
+      const response = await fetch('http://localhost:8000/predict', {  // Changed from 5000 to 8000
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -59,8 +59,8 @@ export default function Upload() {
       }
 
       return [{
-        label: data.prediction.class,        // Adjust based on your backend response
-        confidence: data.prediction.confidence
+        class: data.predictions.class,        
+        confidence: data.predictions.confidence
       }];
     } catch (error) {
       console.error('Analysis error:', error);
@@ -92,65 +92,47 @@ export default function Upload() {
     
     const droppedFile = e.dataTransfer.files[0];
     if (droppedFile) {
-      setFile(droppedFile);
-      await analyzeImage(droppedFile);
+      // Create preview URL and set file
+      const previewUrl = URL.createObjectURL(droppedFile);
+      setFile(Object.assign(droppedFile, { preview: previewUrl }));
+      
+      // Start analysis
+      setIsAnalyzing(true);
+      setProgress(0);
+      try {
+        const results = await analyzeImage(droppedFile);
+        setPredictions(results);
+        setIsAnalyzing(false);
+        setProgress(100);
+        handleSuccessfulUpload();
+      } catch (error) {
+        console.error('Error processing file:', error);
+        setError('Failed to analyze image');
+        setIsAnalyzing(false);
+      }
     }
   };
 
   const handleFileChange = async (event: ChangeEvent<HTMLInputElement>) => {
     try {
-      const file = event.target.files?.[0];
-      if (!file) return;
-
-      // Validate file type
-      const validTypes = ['image/jpeg', 'image/png', 'image/jpg'];
-      if (!validTypes.includes(file.type)) {
-        throw new Error('Invalid file type. Please upload a JPG or PNG image.');
+      const selectedFile = event.target.files?.[0];
+      if (selectedFile) {
+        // Create preview URL and set file
+        const previewUrl = URL.createObjectURL(selectedFile);
+        setFile(Object.assign(selectedFile, { preview: previewUrl }));
+        
+        // Start analysis
+        setIsAnalyzing(true);
+        setProgress(0);
+        const results = await analyzeImage(selectedFile);
+        setPredictions(results);
+        setIsAnalyzing(false);
+        setProgress(100);
+        handleSuccessfulUpload();
       }
-
-      // Validate file size (e.g., max 5MB)
-      const maxSize = 5 * 1024 * 1024; // 5MB in bytes
-      if (file.size > maxSize) {
-        throw new Error('File is too large. Please upload an image smaller than 5MB.');
-      }
-
-      // Sanitize filename
-      const sanitizedName = file.name
-        .toLowerCase()
-        .replace(/[^a-z0-9.]/g, '-') // Replace special chars with hyphens
-        .replace(/--+/g, '-')        // Replace multiple hyphens with single hyphen
-        .replace(/^-+|-+$/g, '');    // Remove leading/trailing hyphens
-
-      // Create new file with sanitized name
-      const newFile = new File([file], sanitizedName, { type: file.type });
-
-      setFile(newFile);
-      setIsAnalyzing(true);
-      setError(null);
-      setProgress(0);
-
-      // Simulate progress (you can adjust this based on your needs)
-      const progressInterval = setInterval(() => {
-        setProgress(prev => {
-          const newProgress = prev >= 90 ? prev : prev + 10;
-          document.documentElement.style.setProperty('--progress', `${newProgress}%`);
-          if (prev >= 90) {
-            clearInterval(progressInterval);
-          }
-          return newProgress;
-        });
-      }, 500);
-
-      const predictions = await analyzeImage(newFile);
-      
-      clearInterval(progressInterval);
-      setProgress(100);
-      setPredictions(predictions);
-      handleSuccessfulUpload();
-      
-    } catch (error: unknown) {
-      setError(error instanceof Error ? error.message : 'Failed to process image');
-    } finally {
+    } catch (error) {
+      console.error('Error processing file:', error);
+      setError('Failed to analyze image');
       setIsAnalyzing(false);
     }
   };
@@ -233,7 +215,7 @@ export default function Upload() {
                   <div className="text-left bg-gray-50 p-4 rounded overflow-auto">
                     {predictions.map((pred, index) => (
                       <div key={index} className="mb-2">
-                        <p className="font-medium text-lg">{pred.label}</p>
+                        <p className="font-medium text-lg">{pred.class}</p>
                         <div className="w-full bg-gray-200 rounded-full h-2.5 mb-1">
                           <div 
                             className={`bg-red-500 h-2.5 rounded-full transition-all duration-500 w-[${pred.confidence * 100}%]`}
@@ -282,8 +264,8 @@ export default function Upload() {
         </div>
       </div>
 
-      {predictions && (
-        <InsuranceOptions kartType={predictions[0].label} />
+      {predictions && predictions[0]?.class && (
+        <InsuranceOptions kartType={predictions[0].class} />
       )}
     </div>
   );
