@@ -21,9 +21,9 @@ type KartCategory = {
 
 // Categorize karts by type
 const KART_CATEGORIES: KartCategory = {
-  standard: ['Cheep_Charge'],
-  performance: ['B_Dasher'],
-  special: ['Flame_Flyer']
+  standard: ['standard_kart', 'Cheep_Charge', 'kart'],
+  performance: ['performance_kart', 'B_Dasher', 'racing'],
+  special: ['special_kart', 'Flame_Flyer', 'custom']
 };
 
 // Define insurance packages
@@ -84,7 +84,9 @@ export default function InsuranceOptions({ kartType }: InsuranceOptionsProps) {
   
   // Determine which insurance packages are available for this kart
   const getRecommendedPackages = () => {
-    console.log('Valid kart types:', Object.values(KART_CATEGORIES).flat());
+    const validKartTypes = Object.values(KART_CATEGORIES).flat();
+    console.log('Valid kart types:', validKartTypes);
+    console.log('Checking if kartType matches:', kartType, validKartTypes.includes(kartType));
     const validKartType = Object.values(KART_CATEGORIES)
       .flat()
       .includes(kartType);

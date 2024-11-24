@@ -5,7 +5,7 @@ import base64
 from io import BytesIO
 import random
 
-# Define kart types that match your frontend categories
+
 KART_TYPES = [
     "Cheep_Charge",    # Standard kart
     "B_Dasher",        # Performance kart

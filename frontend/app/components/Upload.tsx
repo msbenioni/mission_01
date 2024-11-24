@@ -35,10 +35,9 @@ export default function Upload() {
 
   const analyzeImage = async (file: File) => {
     try {
-      // Convert File to base64
       const base64Image = await fileToBase64(file);
       
-      const response = await fetch('http://localhost:8000/predict', {  // Changed from 5000 to 8000
+      const response = await fetch('http://localhost:8000/predict', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -48,20 +47,23 @@ export default function Upload() {
         })
       });
       
+      const data = await response.json();
+      console.log('Backend response:', data);
+      
       if (!response.ok) {
         throw new Error('Failed to analyze image');
       }
-      
-      const data = await response.json();
       
       if (!data.success) {
         throw new Error(data.error || 'Invalid response format');
       }
 
-      return [{
-        class: data.predictions.class,        
+      const predictions = [{
+        class: data.predictions.kartType,
         confidence: data.predictions.confidence
       }];
+      console.log('Formatted predictions:', predictions);
+      return predictions;
     } catch (error) {
       console.error('Analysis error:', error);
       throw error;
